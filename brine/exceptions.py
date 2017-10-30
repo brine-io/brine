@@ -1,0 +1,2 @@
+class BrineError(Exception):
+    pass

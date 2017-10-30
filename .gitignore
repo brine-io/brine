@@ -1,0 +1,4 @@
+*.pyc
+__pycache__
+brine_io.egg-info
+brine_datasets
