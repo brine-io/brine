@@ -23,7 +23,7 @@ class Builder(object):
                 config_path = config['path']
                 config_extra_data = config.get('extra_data') or None
         except (IOError, ValueError, KeyError):
-            raise BuilderError
+            raise BuilderError('Could not parse config file %s.' % config_file_path)
 
         dtype = {}
         converters = {}
@@ -52,12 +52,14 @@ class Builder(object):
             elif column_type == 'category_array':
                 converter = ArrayConverter(CategoryConverter())
                 converters[name] = converter
+            else:
+                raise BuilderError('Unsupported column type for column %s.' % name)
 
         csv_file_path = os.path.join(os.path.dirname(config_file_path), config_path)
         try:
             df = pandas.read_csv(csv_file_path, dtype=dtype, converters=converters)
         except IOError:
-            raise BuilderError
+            raise BuilderError('Could not read csv file %s.' % csv_file_path)
         df = df.reindex(columns=[config_column['name'] for config_column in config_columns])
         progress_bar = tqdm(unit=' images', total=num_image_columns * df.shape[0])
 
@@ -84,6 +86,8 @@ class Builder(object):
                 schema.add_column(name, FloatArray())
             elif column_type == 'category_array':
                 schema.add_column(name, CategoryArray(converters[name].items_converter.categories))
+            else:
+                raise BuilderError('Unsupported column type for column %s.' % name)
 
         ctable = bcolz.ctable.fromdataframe(df, rootdir=os.path.join(destination_dir_path, 'bcolz'))
         ctable.attrs['extra_data'] = json.dumps(config_extra_data)
@@ -94,17 +98,17 @@ class Builder(object):
         src_file_path = os.path.join(src_dir_path, file_path)
         dst_file_path = os.path.join(dst_dir_path, 'images', file_path)
         if not os.path.abspath(dst_file_path).startswith(dst_dir_path):
-            raise BuilderError
+            raise BuilderError('Could not copy image file %s.' % src_file_path)
         try:
             shutil.copyfile(src_file_path, dst_file_path)
         except IOError as ex:
             if ex.errno != errno.ENOENT:
-                raise BuilderError
+                raise BuilderError('Could not copy image file %s.' % src_file_path)
             try:
                 os.makedirs(os.path.dirname(dst_file_path))
                 shutil.copyfile(src_file_path, dst_file_path)
             except IOError:
-                raise BuilderError
+                raise BuilderError('Could not copy image file %s.' % src_file_path)
 
 
 class BuilderError(BrineError):

@@ -74,11 +74,13 @@ class Column(object):
             return {'name': self.name, 'type': 'float_array'}
         elif isinstance(self.column_type, CategoryArray):
             return {'name': self.name, 'type': 'category_array', 'categories': self.column_type.categories}
+        else:
+            raise SchemaError('Unsupported column type for column %s.' % self.name)
 
     @classmethod
     def from_obj(cls, obj):
-        name = obj.get('name')
-        column_type = obj.get('type')
+        name = obj['name']
+        column_type = obj['type']
         if column_type == 'integer':
             return cls(name, Integer())
         elif column_type == 'float':
@@ -97,6 +99,8 @@ class Column(object):
         elif column_type == 'category_array':
             categories = obj.get('categories')
             return cls(name, CategoryArray(categories))
+        else:
+            raise SchemaError('Unsupported column type for column %s.' % name)
 
 
 class ColumnType(object):

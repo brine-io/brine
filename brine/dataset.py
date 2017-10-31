@@ -218,6 +218,8 @@ class Dataset(object):
         Row namedtuple
             A namedtuple for the row at the given index.
         """
+        if index > len(self):
+            raise IndexError
         if self.indices is None:
             real_index = index
         else:

@@ -20,3 +20,7 @@ class TemporaryDirectory(object):
         except OSError as ex:
             if ex.errno != errno.ENOENT:
                 raise
+
+
+def is_image_file(path):
+    return path.endswith(('.bmp', '.gif', '.jpg', '.jpeg', '.png'))

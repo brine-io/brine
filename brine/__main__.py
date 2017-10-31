@@ -5,9 +5,16 @@ from brine.install import install
 from brine.uninstall import uninstall
 from brine.ls import ls
 from brine.info import info
-from brine.build import build
+from brine.build import build_config, build_data_dir
 from brine.push import push
 from brine.exceptions import BrineError
+
+
+def build_func(args):
+    if args.config is not None:
+        build_config(args.dataset, args.config)
+    elif args.data_dir is not None:
+        build_data_dir(args.dataset, args.data_dir)
 
 
 def main():
@@ -43,26 +50,30 @@ def main():
         type=str)
     info_parser.set_defaults(func=lambda args: info(args.dataset))
 
-    # brine build <dataset> --config=<config>
+    # brine build <dataset> (--config=<config file> --data-dir<data directory>)
     build_parser = subparsers.add_parser('build')
     build_parser.add_argument(
         'dataset',
         metavar='<dataset>',
         type=str)
-    build_parser.add_argument(
+    build_parser_group = build_parser.add_mutually_exclusive_group(required=True)
+    build_parser_group.add_argument(
         '--config',
-        metavar='<config>',
-        required=True,
+        metavar='<config file>',
         type=str)
-    build_parser.set_defaults(func=lambda args: build(args.dataset, args.config))
+    build_parser_group.add_argument(
+        '--data-dir',
+        metavar='<data directory>',
+        type=str)
+    build_parser.set_defaults(func=build_func)
 
     # brine push <dataset>
-    # push_parser = subparsers.add_parser('push')
-    # push_parser.add_argument(
-    #     'dataset',
-    #     metavar='<dataset>',
-    #     type=str)
-    # push_parser.set_defaults(func=lambda args: push(args.dataset))
+    push_parser = subparsers.add_parser('push')
+    push_parser.add_argument(
+        'dataset',
+        metavar='<dataset>',
+        type=str)
+    push_parser.set_defaults(func=lambda args: push(args.dataset))
 
     args = parser.parse_args()
 
